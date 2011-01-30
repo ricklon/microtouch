@@ -24,7 +24,7 @@
 #define BLACK (TOCOLOR( 0x00, 0x00, 0x00))
 #define WHITE (TOCOLOR( 0xFF, 0xFF, 0xFF))
 
-
+#define READY 200
 	
 //Game Values
 #define MAX_PARTICLES 15
@@ -34,6 +34,7 @@
 #define HEIGHT 320 
 #define TOP_MARGIN 40
 
+ long previousMillis = 300;;
 
 
 
@@ -266,29 +267,58 @@ public:
 			}
 		return CurrentEnergy;
 	}
+	void openApp () 
+	{
+		//delay(35);
+		setup();
+		stop = false;
+		CurrentEnergy = 240;
+		//delay(200);
+	}
+	void eventNone() 
+	{
+		if (stop == false)
+			{
+				delay(35);
+				if (Drift() <= 0)
+					{	stop = true;				
+						GameOver();
+					}
+			}
 
+		
+	}
+	void eventTouchMove(Event* e)
+	{
+		if (stop == false)
+				{
+					if (TouchMove(e->Touch->x,e->Touch->y,YELLOW) <= 0)
+					{				
+						GameOver();
+						stop = true;
+					}
+				}	
+	}
 
 
 	int OnEvent(Event* e)
 	{
+
 		switch (e->Type)
 		{
 			case Event::OpenApp:
-				delay(100);
-				setup();
-				stop = false;
-				CurrentEnergy = 240;
-				delay(300);
+				
+				if ( previousMillis > READY)
+				{
+				openApp();
+				}
+				else
+				{
+					previousMillis++;	
+				}
 				break;
 			case Event::None:
-				if (stop == false)
-				{
-					delay(35);
-					if (Drift() <= 0)
-						{	stop = true;				
-							GameOver();
-						}
-				}
+				eventNone();	
 				break;
 			
 			case Event::TouchDown:
@@ -296,17 +326,9 @@ public:
 					return -1;		// Quit
 
 			case Event::TouchMove:
-				if (stop == false)
-				{
-					if (TouchMove(e->Touch->x,e->Touch->y,YELLOW) <= 0)
-					{				
-						GameOver();
-						stop = true;
-					}
-				}
+				eventTouchMove(e);
 				break;
-			default:
-				;
+			default:;
 		}
 		return 0;
 	}
