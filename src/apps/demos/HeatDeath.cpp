@@ -17,6 +17,7 @@
 
 //Hello graphics
 #include "Platform.h"
+#include "math.h"
 
 #define GREY(_x) TOCOLOR(_x,_x,_x)
 #define YELLOW (TOCOLOR(0xFA,0xFA,0x00))
@@ -41,7 +42,9 @@ class HeatDeath
 	
 //Game Area
  int CurrentEnergy;
- int Particles[MAX_PARTICLES][5];
+ int Particles[MAX_PARTICLES][6];
+ 
+ bool stop;
 
 /*
 	0 =	int rr;
@@ -49,7 +52,7 @@ class HeatDeath
 	2 = int yy;
 	3 = int vel;
 	4 =	int angle;
-	
+	5 = color;
 */		
 
 public:
@@ -69,8 +72,9 @@ public:
 	{
 		for (int nn = 0; nn < MAX_PARTICLES; nn++)
 		{
-				Graphics.Circle(Particles[nn][1], Particles[nn][2], Particles[nn][0], RED, true);
+				Graphics.Circle(Particles[nn][1], Particles[nn][2], Particles[nn][0], Particles[nn][5], true);
 				moveParticle(Particles[nn][1], Particles[nn][2], Particles[nn][3], Particles[nn][4]);
+				
 		}	
 	}
 
@@ -93,14 +97,16 @@ public:
 		if (yy + dyy < TOP_MARGIN+4)
 			{
 				yy = 320;
-			}				
+			}	
+		
 	}
 
 	void setup()
 	{			
+				stop = false;
 				background();	
 				Graphics.Rectangle(0, 0, 240, 40, YELLOW);//Top
-				DotDrawStr(PStr(Shell_AppName()),8,2,68,RED,true);
+				DotDrawStr("Heat Death",14,2,68,RED,true);
 
 				for (int nn = 0; nn < MAX_PARTICLES; nn++)
 				{
@@ -116,19 +122,17 @@ public:
 							dy = -dy;
 						case 2:
 							dx = -dx;
-							dy - dy;
+							dy = -dy;
 						default:
 						;
-						
-					}		
-							
-										
+					}								
 					Particles[nn][0] = PARTICLE_RADIUS;
 					Particles[nn][1] = xx/240; //xx
 					Particles[nn][2] =  yy/320 + 40; //yy 
-					Particles[nn][3] =  dx; //dx
-					Particles[nn][4] =  dy; //dy
-				
+					Particles[nn][3] =  dx/2; //dx
+					Particles[nn][4] =  dy/2; //dy
+					Particles[nn][5] =  RED; //color
+
 
 				}
 				drawParticles();
@@ -150,11 +154,14 @@ public:
 		}
 		else
 		{	
-			return false;
+			return true;
 		}
-	}
+	}*/
 	
-	*/
+	int  distance(int xx, int yy, int targetx, int targety)
+	{
+		return sqrt(pow((targetx-xx),2) + pow((targety-yy), 2));
+	}
 	
 	void background()
 	{
@@ -172,11 +179,54 @@ public:
 
 //Careful with adding etra things into this event loop. Put stuff in a function called once.
 
-	int TouchMove(int x, int y, int color)
+	int TouchMove(int xx, int yy, int color)
 	{
-		Draw(x, y,color);
+		Draw(xx, yy,color);
 		drawEnergy(CurrentEnergy);
 		CurrentEnergy--;
+		for ( int nn = 0; nn < MAX_PARTICLES; nn++)
+		{
+		//	if (isPointInside(xx,yy, Particles[nn][1], Particles[nn][2]  ))
+		
+		if (distance(xx,yy, Particles[nn][1], Particles[nn][2]) < 30) 
+			{
+				 //Particles[nn][1] = xx; 
+				 //Particles[nn][2] = yy;
+				 if (xx > Particles[nn][1])
+				 {
+				 	Particles[nn][3] =  (Particles[nn][3] + 2) ; 
+
+				 }
+				 if (xx < Particles[nn][1])
+				 {
+				 	Particles[nn][3] =  - Particles[nn][3] + 2; 
+
+				 }
+				 if (yy > Particles[nn][2])
+				 {
+				 	Particles[nn][4] =   (Particles[nn][4] + 2); 
+
+				 }
+				 if (yy < Particles[nn][2])
+				 {
+				 	Particles[nn][4] =  - Particles[nn][4] + 2 ; 
+
+				 }
+				 
+			}	
+			
+			if (distance(xx,yy, Particles[nn][1], Particles[nn][2]) < 10) 
+			{
+				 Particles[nn][1] = xx; 
+				 Particles[nn][2] = yy;
+				 Particles[nn][3] = 0; 
+				 Particles[nn][4] = 0;
+				 Particles[nn][5] =  WHITE; //color
+
+			}	
+		}
+		
+		
 		if (CurrentEnergy <= 0)
 			{
 				return 0;
@@ -184,25 +234,75 @@ public:
 		return CurrentEnergy;
 	}
 
+	int Drift()
+	{
+		drawEnergy(CurrentEnergy);
+		/*
+		for ( int nn = 0; nn < MAX_PARTICLES; nn++)
+		{
+			if (distance(xx,yy, Particles[nn][1], Particles[nn][2]) < 30) 
+			{
+				 Particles[nn][1] = xx; 
+				 Particles[nn][2] = yy;
+				 Particles[nn][3] = ; 
+				 Particles[nn][4] = ;
+			}	
+			
+			if (distance(xx,yy, Particles[nn][1], Particles[nn][2]) < 10) 
+			{
+				 Particles[nn][1] = xx; 
+				 Particles[nn][2] = yy;
+				 Particles[nn][3] = 0; 
+				 Particles[nn][4] = 0;
+			}	
+		}
+		*/
+		background();
+		drawParticles();
+		
+		if (CurrentEnergy <= 0)
+			{
+				return 0;
+			}
+		return CurrentEnergy;
+	}
+
+
+
 	int OnEvent(Event* e)
 	{
 		switch (e->Type)
 		{
 			case Event::OpenApp:
+				delay(100);
 				setup();
+				stop = false;
 				CurrentEnergy = 240;
+				delay(300);
 				break;
-
+			case Event::None:
+				if (stop == false)
+				{
+					delay(35);
+					if (Drift() <= 0)
+						{	stop = true;				
+							GameOver();
+						}
+				}
+				break;
+			
 			case Event::TouchDown:
 				if (e->Touch->y > 320)
 					return -1;		// Quit
 
 			case Event::TouchMove:
-				if (TouchMove(e->Touch->x,e->Touch->y,YELLOW) <= 0)
-				{				
-					GameOver();
-					break;
-					//return -1;
+				if (stop == false)
+				{
+					if (TouchMove(e->Touch->x,e->Touch->y,YELLOW) <= 0)
+					{				
+						GameOver();
+						stop = true;
+					}
 				}
 				break;
 			default:
