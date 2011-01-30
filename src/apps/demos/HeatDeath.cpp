@@ -76,40 +76,53 @@ public:
 
 	void moveParticle(int &xx, int &yy,  int &dxx, int &dyy)
 	{
-		 if ( xx + dxx > WIDTH || xx + dxx < 0)
+		xx += dxx;	
+		yy += dyy;	
+		 if ( xx + dxx > WIDTH )
 			{
-				//dxx = -dxx;
 				xx = 0;
 			}
-			else
+		if (xx + dxx < 0)
 			{
-				xx += dxx;	
-			}
-		if (yy + dyy > HEIGHT || yy + dyy < TOP_MARGIN+4)
-			{
-				//dyy = -dyy;
+			xx = 240;
+			}			
+		if (yy + dyy > HEIGHT)
+			{ 	
 				yy = TOP_MARGIN + 4;			
 			}
-			else
+		if (yy + dyy < TOP_MARGIN+4)
 			{
-				yy += dyy;	
-			}
- 							
+				yy = 320;
+			}				
 	}
 
 	void setup()
 	{			
 				background();	
 				Graphics.Rectangle(0, 0, 240, 40, YELLOW);//Top
-				DotDrawStr(PStr(Shell_AppName()),8,18,68,RED,true);
+				DotDrawStr(PStr(Shell_AppName()),8,2,68,RED,true);
 
 				for (int nn = 0; nn < MAX_PARTICLES; nn++)
 				{
 					u16 xx = RandomBits(16);
 					u16 yy = RandomBits(16);
-					u8 dx = RandomBits(4);
-					u8 dy = RandomBits(4);
-					
+					int dx = nn % xx;
+					int dy = nn % yy;
+					switch (nn % 3) 
+					{
+						case 0:
+							dx = -dx;
+						case 1:
+							dy = -dy;
+						case 2:
+							dx = -dx;
+							dy - dy;
+						default:
+						;
+						
+					}		
+							
+										
 					Particles[nn][0] = PARTICLE_RADIUS;
 					Particles[nn][1] = xx/240; //xx
 					Particles[nn][2] =  yy/320 + 40; //yy 
@@ -128,7 +141,7 @@ public:
 		//Graphics.Rectangle(0, 0, energy ,40 , TOCOLOR( 0xFF, 0xFF, 0xFF));//Energy
 		Graphics.Rectangle(0, 0, TOTALENERGY - energy, 40, BLACK);//Spent		
 	}
-	
+	/*
 	bool isPointInside(int xx, int yy, int targetxx, int targetyy)
 	{
 		if (((xx - targetxx)^2 + (yy - targetyy)^2 ) < (PARTICLE_RADIUS)^2) 
@@ -141,20 +154,13 @@ public:
 		}
 	}
 	
+	*/
 	
 	void background()
 	{
 						//Rectangles are x,y plus width, height, color
 				Graphics.Rectangle(0, 40, 240, 220, BLACK);//screen
 				Graphics.Rectangle(0, 260, 240, 60, BLACK);//Bottom
-
-				//The corners
-				/*
-				Graphics.Circle(0,0,10,GREEN,true);
-				Graphics.Circle(0,320,10,RED,true);
-				Graphics.Circle(240,0,10,RED,true);
-				Graphics.Circle(240,320,10,RED,true);
-				*/
 
 	}
 
