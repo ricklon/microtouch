@@ -19,7 +19,7 @@
 #include "Platform.h"
 
 #define GREY(_x) TOCOLOR(_x,_x,_x)
-#define YELLOW (TOCOLOR(0xFA,0xFA,0xD2))
+#define YELLOW (TOCOLOR(0xFA,0xFA,0x00))
 /*
 short RGBToColor(short r, short g, short b)
 {
@@ -29,6 +29,10 @@ short RGBToColor(short r, short g, short b)
 	return TOCOLOR(r,g,b);
 }
 */
+
+#define TOTALENERGY 240
+int CurrentEnergy;
+
 class Thermo
 {
 public:
@@ -44,17 +48,24 @@ public:
 	}
 
 	void setup()
-	{
+	{			CurrentEnergy = 240;		//One time don't set to 0
 				background();	
+				Graphics.Rectangle(0, 0, 240, 40, YELLOW);//Top
 				DotDrawStr(PStr(Shell_AppName()),8,18,68,RED,true);
-
-
 	}
+	
+	//x is percentage of energy between 0 and 100
+	void drawEnergy(int n)
+	{
+		int energy = n;		
+		//Graphics.Rectangle(0, 0, energy ,40 , TOCOLOR( 0xFF, 0xFF, 0xFF));//Energy
+		Graphics.Rectangle(0, 0, TOTALENERGY - energy, 40, TOCOLOR( 0x00, 0x00, 0x00));//Spent		
+	}
+	
 	
 	void background()
 	{
 						//Rectangles are x,y plus width, height, color
-				Graphics.Rectangle(0, 0, 240, 40, GREY(150));//Top
 				Graphics.Rectangle(0, 40, 240, 220, RED);//screen
 				Graphics.Rectangle(0, 260, 240, 60, BLUE);//Bottom
 
@@ -66,7 +77,26 @@ public:
 
 	}
 
+	void GameOver()
+	{
+		background();
+		DotDrawStr(PStr(Shell_AppName()),8,18,68,RED,true);
+		DotDrawStr("Game Over",50,18,68,RED,true);	
+	}
+
 //Careful with adding etra things into this event loop. Put stuff in a function called once.
+
+	int TouchMove(int x, int y, int color)
+	{
+		Draw(x, y,color);
+		drawEnergy(CurrentEnergy);
+		CurrentEnergy--;
+		if (CurrentEnergy <= 0)
+			{
+				return 0;
+			}
+		return CurrentEnergy;
+	}
 
 	int OnEvent(Event* e)
 	{
@@ -81,7 +111,12 @@ public:
 					return -1;		// Quit
 
 			case Event::TouchMove:
-				Draw(e->Touch->x,e->Touch->y,YELLOW);
+				if (TouchMove(e->Touch->x,e->Touch->y,YELLOW) <= 0)
+				{				
+					GameOver();
+					break;
+					//return -1;
+				}
 				break;
 			default:
 				;
