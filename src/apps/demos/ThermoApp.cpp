@@ -20,38 +20,105 @@
 
 #define GREY(_x) TOCOLOR(_x,_x,_x)
 #define YELLOW (TOCOLOR(0xFA,0xFA,0x00))
-/*
-short RGBToColor(short r, short g, short b)
-{
-	r = bound(r,0,255);
-	g = bound(g,0,255);
-	b = bound(b,0,255);
-	return TOCOLOR(r,g,b);
-}
-*/
+#define BLACK (TOCOLOR( 0x00, 0x00, 0x00))
+#define WHITE (TOCOLOR( 0xFF, 0xFF, 0xFF))
 
+
+	
+//Game Values
+#define MAX_PARTICLES 15
 #define TOTALENERGY 240
-int CurrentEnergy;
+#define PARTICLE_RADIUS 5
+#define WIDTH 240
+#define HEIGHT 320 
+#define TOP_MARGIN 40
+
+
+
 
 class Thermo
 {
+	
+//Game Area
+ int CurrentEnergy;
+ int Particles[MAX_PARTICLES][5];
+
+/*
+	0 =	int rr;
+	1 =	int xx;
+	2 = int yy;
+	3 = int vel;
+	4 =	int angle;
+	
+*/		
+
 public:
-	void Draw(int x, int y, int color)
+	void Draw(int xx, int yy, int color)
 	{
 		//Freshen the background
 		background();	
 
 		//The tap
-		Graphics.Circle(x,y,10,color,true);			
+		Graphics.Circle(xx,yy,10,color,true);	
+		drawParticles();
 
+				
+	}
+	
+	void drawParticles()
+	{
+		for (int nn = 0; nn < MAX_PARTICLES; nn++)
+		{
+				Graphics.Circle(Particles[nn][1], Particles[nn][2], Particles[nn][0], RED, true);
+				moveParticle(Particles[nn][1], Particles[nn][2], Particles[nn][3], Particles[nn][4]);
+		}	
+	}
 
+	void moveParticle(int &xx, int &yy,  int &dxx, int &dyy)
+	{
+		 if ( xx + dxx > WIDTH || xx + dxx < 0)
+			{
+				//dxx = -dxx;
+				xx = 0;
+			}
+			else
+			{
+				xx += dxx;	
+			}
+		if (yy + dyy > HEIGHT || yy + dyy < TOP_MARGIN+4)
+			{
+				//dyy = -dyy;
+				yy = TOP_MARGIN + 4;			
+			}
+			else
+			{
+				yy += dyy;	
+			}
+ 							
 	}
 
 	void setup()
-	{			CurrentEnergy = 240;		//One time don't set to 0
+	{			
 				background();	
 				Graphics.Rectangle(0, 0, 240, 40, YELLOW);//Top
 				DotDrawStr(PStr(Shell_AppName()),8,18,68,RED,true);
+
+				for (int nn = 0; nn < MAX_PARTICLES; nn++)
+				{
+					u16 xx = RandomBits(16);
+					u16 yy = RandomBits(16);
+					u8 dx = RandomBits(4);
+					u8 dy = RandomBits(4);
+					
+					Particles[nn][0] = PARTICLE_RADIUS;
+					Particles[nn][1] = xx/240; //xx
+					Particles[nn][2] =  yy/320 + 40; //yy 
+					Particles[nn][3] =  dx; //dx
+					Particles[nn][4] =  dy; //dy
+
+
+				}
+				drawParticles();
 	}
 	
 	//x is percentage of energy between 0 and 100
@@ -59,29 +126,42 @@ public:
 	{
 		int energy = n;		
 		//Graphics.Rectangle(0, 0, energy ,40 , TOCOLOR( 0xFF, 0xFF, 0xFF));//Energy
-		Graphics.Rectangle(0, 0, TOTALENERGY - energy, 40, TOCOLOR( 0x00, 0x00, 0x00));//Spent		
+		Graphics.Rectangle(0, 0, TOTALENERGY - energy, 40, BLACK);//Spent		
+	}
+	
+	bool isPointInside(int xx, int yy, int targetxx, int targetyy)
+	{
+		if (((xx - targetxx)^2 + (yy - targetyy)^2 ) < (PARTICLE_RADIUS)^2) 
+		{
+			return true;
+		}
+		else
+		{	
+			return false;
+		}
 	}
 	
 	
 	void background()
 	{
 						//Rectangles are x,y plus width, height, color
-				Graphics.Rectangle(0, 40, 240, 220, RED);//screen
-				Graphics.Rectangle(0, 260, 240, 60, BLUE);//Bottom
+				Graphics.Rectangle(0, 40, 240, 220, BLACK);//screen
+				Graphics.Rectangle(0, 260, 240, 60, BLACK);//Bottom
 
 				//The corners
+				/*
 				Graphics.Circle(0,0,10,GREEN,true);
 				Graphics.Circle(0,320,10,RED,true);
 				Graphics.Circle(240,0,10,RED,true);
 				Graphics.Circle(240,320,10,RED,true);
+				*/
 
 	}
 
 	void GameOver()
 	{
 		background();
-		DotDrawStr(PStr(Shell_AppName()),8,18,68,RED,true);
-		DotDrawStr("Game Over",50,18,68,RED,true);	
+		DotDrawStr("Game Over",20,1,68,RED,true);	
 	}
 
 //Careful with adding etra things into this event loop. Put stuff in a function called once.
@@ -104,6 +184,7 @@ public:
 		{
 			case Event::OpenApp:
 				setup();
+				CurrentEnergy = 240;
 				break;
 
 			case Event::TouchDown:
