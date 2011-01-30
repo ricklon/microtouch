@@ -29,7 +29,7 @@ short RGBToColor(short r, short g, short b)
 	return TOCOLOR(r,g,b);
 }
 */
-class HelloGraphics
+class Thermo
 {
 public:
 	void Draw(int x, int y, int color)
@@ -46,6 +46,9 @@ public:
 	void setup()
 	{
 				background();	
+				DotDrawStr(PStr(Shell_AppName()),8,18,68,RED,true);
+
+
 	}
 	
 	void background()
@@ -87,4 +90,4 @@ public:
 	}
 };
 
-INSTALL_APP(HGraphics,HelloGraphics);
+INSTALL_APP(Thermo,Thermo);
